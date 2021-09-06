@@ -20,7 +20,7 @@ class InputFeild extends React.Component {
 
             // the returned data will be saved in the state.
             cityData: {},
-            cityImage:'',
+            cityImage: '',
         }
     };
 
@@ -39,16 +39,23 @@ class InputFeild extends React.Component {
         //     https://eu1.locationiq.com/v1/search.php?key=       q=${     }&format=json
         const dataUrl = `https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityName}&format=json`;
         // console.log(url);
-        const mapUrl= `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityData.lat,this.state.cityData.long}&zoom=1-18`;
+        const mapUrl = `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityData.lat},${this.state.cityData.long}`;
 
         // ===== sending axios along with the url will send the key and the query parameter.
-        const response = await axios.get(dataUrl,mapUrl);
-        console.log(response.data[0]);// this line will get the first object that matches the word entered in the field.
-
+        const response = await axios.get(dataUrl)
         this.setState({
             cityData: response.data[0],
-            cityImage: response.data[0],
         });
+
+
+        const responseMap = await axios.get(mapUrl)
+        this.setState({
+            cityImage: responseMap,
+        });
+     
+
+
+        console.log(response.data[0]);// this line will get the first object that matches the word entered in the field.
     }
 
     // the Form will hold the data , explore button will send the value in the request.
@@ -62,7 +69,7 @@ class InputFeild extends React.Component {
 
 
                 <div>
-                    <Card style={{ width: '18rem' }}>
+                    <Card style={{ width: '80rem' , color:'red' }}>
                         <Card.Img variant="top" src={this.state.cityImage} />
                         <Card.Body>
                             <Card.Title>City Information :</Card.Title>
@@ -75,10 +82,8 @@ class InputFeild extends React.Component {
                             <Card.Text>
                                 long:{this.state.cityData.log}
                             </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
                         </Card.Body>
                     </Card>
-
                 </div>
 
                 {/* <Form onSubmit={this.formSubmit}>
@@ -90,6 +95,7 @@ class InputFeild extends React.Component {
                         Explore
                     </Button>
                 </Form> */}
+
             </div>
         );
     }
