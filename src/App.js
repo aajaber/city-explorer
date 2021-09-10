@@ -1,116 +1,85 @@
-import React, { Component } from 'react'
+import './App.css';
 import axios from 'axios';
+import React from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
-import Card from 'react-bootstrap/Card'
-import 'bootstrap/dist/css/bootstrap.min.css';
-
-
-export class App extends Component {
 
 
 
+class App extends React.Component {
 
-  //onChange event is used to save the values from the input field.
+
   constructor(props) {
     super(props);
     this.state = {
+
       cityName: '',
+      cityData: '',
+      displayed: false,
+      errormessege: false
 
-      // the returned data will be saved in the state.
-      cityData: {},
-      cityImage: '',
-      cityWeather: '',
-      cityWeatherDescription: '',
-    }
-  };
-
-
-  //form event : 
-  formSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-
-      // ============= Consts ============== 
-
-
-      //     https://eu1.locationiq.com/v1/search.php?key=       q=${     }&format=json
-      const dataUrl = `https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityName}&format=json`;
-      // console.log(url);
-      const dataResponse = await axios.get(dataUrl);
-
-      const wethearUrl = await `${process.env.REACT_APP_SERVER_URI}/get-wethear?city_name=${this.state.cityName}`;
-      const weatherResponse = await axios.get(wethearUrl);
-
-      const cityWeatherDescription = weatherResponse.data[0].weather.description;
-      // console.log(cityWeatherDescription);
-      const centerKey = this.state.cityData.lat + "," + this.state.cityData.lon;
-
-      const mapUrl = `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_CITY_IQ_KEY}&center=${centerKey}&zoom="5"&format=json`
-
-
-      //================= NAME, LAT , LONG & WEATHER.
-      await this.setState({
-        cityData: dataResponse.data[0],
-        cityWeather: weatherResponse.data[0],
-      });
-      //=============================== MAP IMAGE
-      this.setState({
-        cityImage: mapUrl
-      })
-    }
-    catch (fail) {
-      this.setState({
-        fail: true,
-      });
     }
   }
 
-  // the Form will hold the data , explore button will send the value in the request.
+  
+  formSubmit = async (e) => {
+    e.preventDefault();
+    const dataUrl = `https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityName}&format=json`;
+    try {
+
+      let locresult = await axios.get(dataUrl);
+
+
+      this.setState({
+        cityData: locresult.data[0],
+        displayed: true
+
+      })
+    }
+    catch {
+      this.setState({
+        displayed: false,
+        errormessege: true
+      })
+    }
+  }
+
+  
+  cityNameHandeler = (event) => {
+    this.setState({
+      cityName: event.target.value
+    })
+  }
+
   render() {
+    const mapUrl = `https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityData.lat, this.state.cityData.long}&zoom=1-18`;
+
     return (
       <div>
+        <h1 style={{ textAlign: 'center' }}>City Explorer</h1>
 
-        <Form className='form' onSubmit={this.formSubmit}>
-          <Form.Group className="mb-3" controlId="place" >
-            <Form.Control type="text" onChange={this.cityNameHandeler} placeholder='Enter city name' />
-            <Button variant="primary" type="Explorer">
-              Explorer
-            </Button>
-          </Form.Group>
+        <Form onSubmit={this.formSubmit}>
+          <Form.Control type="text" placeholder="Enter City Name" onChange={this.cityNameHandeler} />
+          <Button variant="primary" type="submit">Submit</Button>
         </Form>
 
+        <p style={{ textAlign: 'center' }}>{this.state.cityData.display_name}</p>
+        <p style={{ textAlign: 'center' }}>{this.state.cityData.lat}</p>
+        <p style={{ textAlign: 'center' }}>{this.state.cityData.lon}</p>
+        {
+          this.state.displayed && <img src={mapUrl}
+            alt='map'
+          />
 
-        <Card style={{ width: '80rem', color: 'red' }}>
-          <Card.Img variant="top" src={this.state.cityImage} />
-          <Card.Body>
-            <Card.Title>City Information :</Card.Title>
-            <Card.Text>
-              {this.state.cityData.display_name}
-            </Card.Text>
-            <Card.Text>
-              lat:{this.state.cityData.lat}
-            </Card.Text>
-            <Card.Text>
-              long:{this.state.cityData.log}
-            </Card.Text>
-          </Card.Body>
-        </Card>
-
-
-
-        {/* <form onSubmit={this.formSubmit}>
-                  <input type='text' onChange={this.cityNameHandeler} placeholder='Enter city name' />
-                  <input type='submit' value='Explore' />
-              </form> */}
-
-
-
+        }
+        {
+          this.state.errormessege &&
+          <p >Faild to load Data !</p>
+        }
       </div>
     );
   }
 
 }
-
-export default App
+export default App;
