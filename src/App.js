@@ -15,41 +15,73 @@ class App extends React.Component {
     this.state = {
 
       cityName: '',
-      cityData: '',
+      cityData: {},
       displayed: false,
-      errormessege: false
-
+      errormessege: false,
+      errorWarning: "",
+      errorName: "",
+      weatherList: [],
     }
   }
 
-  
+
   formSubmit = async (e) => {
     e.preventDefault();
+    this.setState({
+      displayed: true,
+    });
     const dataUrl = `https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityName}&format=json`;
     try {
+      const WeatherUrl = `${process.env.REACT_APP_SERVER_URL}/weather`;
 
-      let locresult = await axios.get(dataUrl);
-
+      let dataResponse = await axios.get(dataUrl);
+      let weatherDataResponse = await axios.get(WeatherUrl);
 
       this.setState({
-        cityData: locresult.data[0],
+        cityData: dataResponse.data[0],
+        weatherList: weatherDataResponse.data[0],
         displayed: true
 
       })
     }
-    catch {
-      this.setState({
-        displayed: false,
-        errormessege: true
-      })
+    catch (error) {
+      if (this.state.cityName) {
+        this.setState({
+          
+          errormessege: true,
+          errorName: error.message,
+          errorWarning: "Enter a city name within your zone",
+          data: "",
+          cityName: "",
+        });
+      }
+      else {
+        this.setState({
+          errormessege: true,
+
+          errorName: error.message,
+          errorWarning: "City name field is required",
+          data: "",
+          cityName: "",
+        });
+      }
     }
   }
 
-  
+
   cityNameHandeler = (event) => {
-    this.setState({
-      cityName: event.target.value
-    })
+    if (event.target.value) {
+      this.setState({
+        cityName: event.target.value
+      })
+    }
+    else {
+      this.setState({
+        errormessege: true,
+        cityName: "",
+      });
+    }
+
   }
 
   render() {
@@ -77,6 +109,19 @@ class App extends React.Component {
           this.state.errormessege &&
           <p >Faild to load Data !</p>
         }
+
+        <div>
+          {this.state.weatherList.map((item) => {
+            return (
+              <div>
+                <p>{item.data[0].valid_date}</p>
+                <p>{item.data[0].weather.description}</p>
+                <p>{item.data[0].app_max_temp}</p>
+                <p>{item.data[0].app_min_temp}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
