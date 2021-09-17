@@ -5,6 +5,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 
+import Weather from "./components/weather";
+import Movies from "./components/movies";
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -15,7 +18,9 @@ class App extends React.Component {
       errormessege: false,
       errorWarning: "",
       errorName: "",
-      weatherList: [],
+
+      cityInfo: [],
+      cityMoviesInfo: [],
     };
   }
 
@@ -26,15 +31,26 @@ class App extends React.Component {
     });
     const dataUrl = `https://eu1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_CITY_IQ_KEY}&q=${this.state.cityName}&format=json`;
     try {
-      const WeatherUrl = `${process.env.REACT_APP_SERVER_URL}/weather`;
-
       let dataResponse = await axios.get(dataUrl);
-      let weatherDataResponse = await axios.get(WeatherUrl);
-
       this.setState({
         cityData: dataResponse.data[0],
-        weatherList: weatherDataResponse.data[0],
         displayed: true,
+      });
+
+      const weatherResponse = await axios.get(
+        `${process.env.REACT_APP_SERVER_URL}/weather?city=${cityName}`
+      );
+
+      this.setState({
+        cityInfo: weatherResponse.data,
+      });
+
+      const moviesResponse = await axios.get(
+        `${process.env.REACT_APP_SERVER_URL}/movies?query=${cityName}`
+      );
+
+      this.setState({
+        cityMoviesInfo: moviesResponse.data,
       });
     } catch (error) {
       if (this.state.cityName) {
@@ -100,16 +116,13 @@ class App extends React.Component {
         {this.state.errormessege && <p>Faild to load Data !</p>}
 
         <div>
-          {this.state.weatherList.map((item) => {
-            return (
-              <div>
-                <p>{item.data[0].valid_date}</p>
-                <p>{item.data[0].weather.description}</p>
-                <p>{item.data[0].app_max_temp}</p>
-                <p>{item.data[0].app_min_temp}</p>
-              </div>
-            );
-          })}
+          <Weather
+            cityInfo={this.state.cityInfo}
+            cityData={this.state.cityData}
+          />
+        </div>
+        <div>
+          <Movies cityMoviesInfo={this.state.cityMoviesInfo} />
         </div>
       </div>
     );
